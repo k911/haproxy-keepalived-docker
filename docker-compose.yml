@@ -1,0 +1,53 @@
+version: "3.6"
+
+networks:
+  ha-stack:
+    name: ha-stack
+
+services:
+  runner:
+    image: "runner:local"
+    build:
+      context: .
+    networks:
+      - ha-stack
+
+  ha-proxy-a:
+    image: "haproxy:2.0-alpine"
+    networks:
+      ha-stack:
+        aliases:
+          - proxy-a.ha.stack
+    volumes:
+      - "./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro"
+    ports:
+      - 6000:80
+
+  ha-proxy-b:
+    image: "haproxy:2.0-alpine"
+    networks:
+      ha-stack:
+        aliases:
+          - proxy-b.ha.stack
+    volumes:
+      - "./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro"
+    ports:
+      - 8000:80
+
+  web-server-b:
+    image: "nginx:stable-alpine"
+    networks:
+      ha-stack:
+        aliases:
+          - web-b.ha.stack
+    volumes:
+      - "./web/server-b/index.html:/usr/share/nginx/html/index.html:ro"
+
+  web-server-a:
+    image: "nginx:stable-alpine"
+    networks:
+      ha-stack:
+        aliases:
+          - web-a.ha.stack
+    volumes:
+      - "./web/server-a/index.html:/usr/share/nginx/html/index.html:ro"
