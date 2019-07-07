@@ -32,7 +32,6 @@ services:
     environment:
       KEEPALIVED_COMMAND_LINE_ARGUMENTS: >-
         --log-detail
-        --dump-conf
     volumes:
       - "./keepalived/proxy-a/keepalived.conf:/usr/local/etc/keepalived/keepalived.conf:ro"
       - "./keepalived/notify.sh:/container/service/keepalived/assets/notify.custom.sh:ro"
@@ -47,7 +46,11 @@ services:
     environment:
       KEEPALIVED_COMMAND_LINE_ARGUMENTS: >-
         --log-detail
-        --dump-conf
+      # KEEPALIVED_COMMAND_LINE_ARGUMENTS: >-
+      #   -–dont-release-vrrp
+      #   -–dont-release-ipvs
+      #   --log-detail
+      #   --dump-conf
     volumes:
       - "./keepalived/proxy-b/keepalived.conf:/usr/local/etc/keepalived/keepalived.conf:ro"
       - "./keepalived/notify.sh:/container/service/keepalived/assets/notify.custom.sh:ro"
