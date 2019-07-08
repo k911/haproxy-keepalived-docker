@@ -1,5 +1,3 @@
-sudo su -
-
 apt update
 apt -y install docker.io dnsutils tshark ipvsadm
 docker --version
