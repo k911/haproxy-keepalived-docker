@@ -94,3 +94,19 @@ services:
           - web-a.ha.stack
     volumes:
       - "./web/server-a/index.html:/usr/share/nginx/html/index.html:ro"
+
+  web-server-a:
+    image: "nginx:stable-alpine"
+    networks:
+      ha-stack:
+        aliases:
+          - web-a.ha.stack
+    volumes:
+      - "./web/server-a/index.html:/usr/share/nginx/html/index.html:ro"
+
+  webserver:
+    image: "nginx:stable-alpine"
+    volumes:
+      - "./web/index.html:/usr/share/nginx/html/index.html:ro"
+    ports:
+      - 80:80
