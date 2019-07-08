@@ -2,7 +2,9 @@ version: "3.6"
 
 networks:
   ha-stack:
-    name: ha-stack
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
 
 services:
   runner:
@@ -12,19 +14,11 @@ services:
     networks:
       - ha-stack
 
-  runner-host:
-    image: "runner:local"
-    network_mode: host
-    cap_add:
-      - NET_ADMIN
-      - NET_BROADCAST
-      - NET_RAW
-    build:
-      context: .
-
-  keepalived-proxy-a:
+  keepalived-a:
     image: "osixia/keepalived:2.0.17"
-    network_mode: host
+    networks:
+      ha-stack:
+        ipv4_address: 172.20.0.30
     cap_add:
       - NET_ADMIN
       - NET_BROADCAST
@@ -36,9 +30,11 @@ services:
       - "./keepalived/proxy-a/keepalived.conf:/usr/local/etc/keepalived/keepalived.conf:ro"
       - "./keepalived/notify.sh:/container/service/keepalived/assets/notify.custom.sh:ro"
 
-  keepalived-proxy-b:
+  keepalived-b:
     image: "osixia/keepalived:2.0.17"
-    network_mode: host
+    networks:
+      ha-stack:
+        ipv4_address: 172.20.0.40
     cap_add:
       - NET_ADMIN
       - NET_BROADCAST
@@ -55,29 +51,27 @@ services:
       - "./keepalived/proxy-b/keepalived.conf:/usr/local/etc/keepalived/keepalived.conf:ro"
       - "./keepalived/notify.sh:/container/service/keepalived/assets/notify.custom.sh:ro"
 
-  ha-proxy-a:
+  haproxy-a:
     image: "haproxy:2.0-alpine"
     networks:
       ha-stack:
+        ipv4_address: 172.20.0.50
         aliases:
-          - proxy-a.ha.stack
+          - haproxy-a.ha.stack
     volumes:
       - "./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro"
-    ports:
-      - 6000:80
 
-  ha-proxy-b:
+  haproxy-b:
     image: "haproxy:2.0-alpine"
     networks:
       ha-stack:
+        ipv4_address: 172.20.0.60
         aliases:
-          - proxy-b.ha.stack
+          - haproxy-b.ha.stack
     volumes:
       - "./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro"
-    ports:
-      - 8000:80
 
-  web-server-b:
+  web-b:
     image: "nginx:stable-alpine"
     networks:
       ha-stack:
@@ -86,7 +80,7 @@ services:
     volumes:
       - "./web/server-b/index.html:/usr/share/nginx/html/index.html:ro"
 
-  web-server-a:
+  web-a:
     image: "nginx:stable-alpine"
     networks:
       ha-stack:
@@ -94,47 +88,3 @@ services:
           - web-a.ha.stack
     volumes:
       - "./web/server-a/index.html:/usr/share/nginx/html/index.html:ro"
-
-  web-server-a:
-    image: "nginx:stable-alpine"
-    networks:
-      ha-stack:
-        aliases:
-          - web-a.ha.stack
-    volumes:
-      - "./web/server-a/index.html:/usr/share/nginx/html/index.html:ro"
-
-  webserver:
-    image: "nginx:stable-alpine"
-    volumes:
-      - "./web/index.html:/usr/share/nginx/html/index.html:ro"
-    ports:
-      - 80:80
-
-  keepalived-a:
-    image: "osixia/keepalived:2.0.17"
-    network_mode: host
-    cap_add:
-      - NET_ADMIN
-      - NET_BROADCAST
-      - NET_RAW
-    environment:
-      KEEPALIVED_COMMAND_LINE_ARGUMENTS: >-
-        --log-detail
-    volumes:
-      - "./keepalived/keepalived-a.conf:/usr/local/etc/keepalived/keepalived.conf:ro"
-      - "./keepalived/notify.sh:/container/service/keepalived/assets/notify.custom.sh:ro"
-
-  keepalived-b:
-    image: "osixia/keepalived:2.0.17"
-    network_mode: host
-    cap_add:
-      - NET_ADMIN
-      - NET_BROADCAST
-      - NET_RAW
-    environment:
-      KEEPALIVED_COMMAND_LINE_ARGUMENTS: >-
-        --log-detail
-    volumes:
-      - "./keepalived/keepalived-b.conf:/usr/local/etc/keepalived/keepalived.conf:ro"
-      - "./keepalived/notify.sh:/container/service/keepalived/assets/notify.custom.sh:ro"
