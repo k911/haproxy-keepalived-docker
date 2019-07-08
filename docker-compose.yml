@@ -110,3 +110,31 @@ services:
       - "./web/index.html:/usr/share/nginx/html/index.html:ro"
     ports:
       - 80:80
+
+  keepalived-a:
+    image: "osixia/keepalived:2.0.17"
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_BROADCAST
+      - NET_RAW
+    environment:
+      KEEPALIVED_COMMAND_LINE_ARGUMENTS: >-
+        --log-detail
+    volumes:
+      - "./keepalived/keepalived-a.conf:/usr/local/etc/keepalived/keepalived.conf:ro"
+      - "./keepalived/notify.sh:/container/service/keepalived/assets/notify.custom.sh:ro"
+
+  keepalived-b:
+    image: "osixia/keepalived:2.0.17"
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_BROADCAST
+      - NET_RAW
+    environment:
+      KEEPALIVED_COMMAND_LINE_ARGUMENTS: >-
+        --log-detail
+    volumes:
+      - "./keepalived/keepalived-b.conf:/usr/local/etc/keepalived/keepalived.conf:ro"
+      - "./keepalived/notify.sh:/container/service/keepalived/assets/notify.custom.sh:ro"
