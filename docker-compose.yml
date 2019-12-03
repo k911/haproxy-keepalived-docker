@@ -1,4 +1,23 @@
-version: "3.6"
+version: "3.7"
+
+x-haproxy-defaults: &haproxy-service
+  image: "haproxy:2.0-alpine"
+  volumes:
+      - "./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro"
+
+x-keepalived-defaults: &keepalived-service
+  image: "osixia/keepalived:2.0.19"
+  cap_add:
+    - NET_ADMIN
+    - NET_BROADCAST
+    - NET_RAW
+  environment:
+    KEEPALIVED_COMMAND_LINE_ARGUMENTS: >-
+      --log-detail
+#      -–dont-release-vrrp
+#      -–dont-release-ipvs
+#      --log-detail
+#      --dump-conf
 
 networks:
   ha-stack:
@@ -15,61 +34,34 @@ services:
       - ha-stack
 
   keepalived-a:
-    image: "osixia/keepalived:2.0.17"
-    networks:
-      ha-stack:
-        ipv4_address: 172.20.0.30
-    cap_add:
-      - NET_ADMIN
-      - NET_BROADCAST
-      - NET_RAW
-    environment:
-      KEEPALIVED_COMMAND_LINE_ARGUMENTS: >-
-        --log-detail
+    <<: *keepalived-service
+    network_mode: host
     volumes:
       - "./keepalived/proxy-a/keepalived.conf:/usr/local/etc/keepalived/keepalived.conf:ro"
       - "./keepalived/notify.sh:/container/service/keepalived/assets/notify.custom.sh:ro"
 
   keepalived-b:
-    image: "osixia/keepalived:2.0.17"
-    networks:
-      ha-stack:
-        ipv4_address: 172.20.0.40
-    cap_add:
-      - NET_ADMIN
-      - NET_BROADCAST
-      - NET_RAW
-    environment:
-      KEEPALIVED_COMMAND_LINE_ARGUMENTS: >-
-        --log-detail
-      # KEEPALIVED_COMMAND_LINE_ARGUMENTS: >-
-      #   -–dont-release-vrrp
-      #   -–dont-release-ipvs
-      #   --log-detail
-      #   --dump-conf
+    <<: *keepalived-service
+    network_mode: host
     volumes:
       - "./keepalived/proxy-b/keepalived.conf:/usr/local/etc/keepalived/keepalived.conf:ro"
       - "./keepalived/notify.sh:/container/service/keepalived/assets/notify.custom.sh:ro"
 
   haproxy-a:
-    image: "haproxy:2.0-alpine"
+    <<: *haproxy-service
     networks:
       ha-stack:
         ipv4_address: 172.20.0.50
         aliases:
           - haproxy-a.ha.stack
-    volumes:
-      - "./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro"
 
   haproxy-b:
-    image: "haproxy:2.0-alpine"
+    <<: *haproxy-service
     networks:
       ha-stack:
         ipv4_address: 172.20.0.60
         aliases:
           - haproxy-b.ha.stack
-    volumes:
-      - "./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro"
 
   web-b:
     image: "nginx:stable-alpine"
